@@ -1,6 +1,7 @@
 import autogen
 from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 from inventory import  get_inventory, get_inventory_declaration
+from send_mail import send_mail, send_email_declaration
 
 config_list = autogen.config_list_from_json('OAI_CONFIG_LIST',
         filter_dict={"model": "gpt-4o"})
@@ -17,7 +18,7 @@ user_proxy = autogen.UserProxyAgent(
     system_message="You are the boss",
     human_input_mode="NEVER",
     is_termination_msg=is_termination_msg,
-    function_map={"get_inventory": get_inventory}
+    function_map={"get_inventory": get_inventory, "send_mail": send_mail}
 )
 
 damage_analyst = MultimodalConversableAgent(
@@ -44,11 +45,11 @@ inventory_manager = autogen.AssistantAgent(
 customer_support_agent = autogen.AssistantAgent(
     name="customer_support_agent",
     system_message="""
-        As the customer support agent you are responsible for drafting
+        As the customer support agent you are responsible for drafting and sending
         email following confirmation of inventory and pricing.
         Respond with "TERMINATE" when you have finished.
     """,
-    llm_config={"config_list": config_list}
+    llm_config={"config_list": config_list, "functions": [send_email_declaration]}
 )
 
 groupchat = autogen.GroupChat(
@@ -70,7 +71,7 @@ user_proxy.initiate_chat(
         
         Step 2: Inventory Manager verifies part availibilty in the database.
         
-        Step 3: Customer Support Agent composes a response email
+        Step 3: Customer Support Agent composes and sends a response email
         
         Image Reference: https://teslamotorsclub.com/tmc/attachments/carphoto_1144747756-jpg.650059/
     """

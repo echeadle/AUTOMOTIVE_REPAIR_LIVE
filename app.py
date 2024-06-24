@@ -2,12 +2,20 @@ import autogen
 from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 from inventory import  get_inventory, get_inventory_declaration
 from send_mail import send_mail, send_email_declaration
+from flask import Flask, request, render_template
+
+
+app = Flask(__name__)
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
 
 config_list = autogen.config_list_from_json('OAI_CONFIG_LIST',
         filter_dict={"model": "gpt-4o"})
 
 config_list_v4 = autogen.config_list_from_json('OAI_CONFIG_LIST',
-        filter_dict={"model": "gpt-4-turbo"})
+        filter_dict={"model": "gpt-4o"})
 
 def is_termination_msg(data):
     has_content = "content" in data and data["content"] is not None
@@ -61,21 +69,41 @@ manager = autogen.GroupChatManager(
     groupchat=groupchat, llm_config={"config_list": config_list}
 )
 
-user_proxy.initiate_chat(
-    manager, message="""
-        Process Overview:
-        
-        Step 1: Damage Analyst identifies the car brand and the
-        requested part. (is something central, or something broken
-        missing?) from the customers message and image.
-        
-        Step 2: Inventory Manager verifies part availibilty in the database.
-        
-        Step 3: Customer Support Agent composes and sends a response email
-        
-        Image Reference: https://teslamotorsclub.com/tmc/attachments/carphoto_1144747756-jpg.650059/
+def initiate_chat():
     """
-)
+    Initiates a chat process by sending a message to a group chat manager.
+
+    This function sends a message to the group chat manager, which triggers the chat process.
+    The message includes an overview of the process steps, including identifying the car brand
+    and requested part from the customer's message and image, verifying part availability in
+    the database, and composing and sending a response email.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
+    user_proxy.initiate_chat(
+        manager, message="""
+            Process Overview:
+            
+            Step 1: Damage Analyst identifies the car brand and the
+            requested part. (is something central, or something broken
+            missing?) from the customers message and image.
+            
+            Step 2: Inventory Manager verifies part availibilty in the database.
+            
+            Step 3: Customer Support Agent composes and sends a response email
+            
+            E-Mail of the customer: bob@foe.de
+            Image Reference: https://teslamotorsclub.com/tmc/attachments/carphoto_1144747756-jpg.650059/
+
+        """
+    )
   # Image Reference: https://cdn.motor1.com/images/mgl/o6rkL/s1/tesla-model-3-broken-screen.webp
   #  Step 4: Conclude the process with sending "Terminate".
   # For the time being respond that everything is availible.
+  
+if __name__ == "__main__":
+    app.run(debug=True)
